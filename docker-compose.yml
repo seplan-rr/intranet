@@ -8,7 +8,7 @@ services:
       ## Note that you need to do a manual `ALTER ROLE` query if you
       ## change this on a system after booting the postgres container
       ## the first time on a host.  Instructions are available in README.md.
-      POSTGRES_PASSWORD: "REPLACE_WITH_SECURE_POSTGRES_PASSWORD"
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - "postgresql-14:/var/lib/postgresql/data:rw"
   memcached:
@@ -25,13 +25,13 @@ services:
     environment:
       SASL_CONF_PATH: "/home/memcache/memcached.conf"
       MEMCACHED_SASL_PWDB: "/home/memcache/memcached-sasl-db"
-      MEMCACHED_PASSWORD: "REPLACE_WITH_SECURE_MEMCACHED_PASSWORD"
+      MEMCACHED_PASSWORD: ${MEMCACHED_PASSWORD}
   rabbitmq:
     image: "rabbitmq:4.0.7"
     restart: unless-stopped
     environment:
       RABBITMQ_DEFAULT_USER: "zulip"
-      RABBITMQ_DEFAULT_PASS: "REPLACE_WITH_SECURE_RABBITMQ_PASSWORD"
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     volumes:
       - "rabbitmq:/var/lib/rabbitmq:rw"
   redis:
@@ -44,7 +44,7 @@ services:
         echo "requirepass '$$REDIS_PASSWORD'" > /etc/redis.conf
         exec redis-server /etc/redis.conf
     environment:
-      REDIS_PASSWORD: "REPLACE_WITH_SECURE_REDIS_PASSWORD"
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     volumes:
       - "redis:/data:rw"
   zulip:
@@ -62,6 +62,8 @@ services:
       - "80:80"
       - "443:443"
     environment:
+      DISABLE_HTTPS: "True"
+
       ## See https://github.com/zulip/docker-zulip#configuration for
       ## details on this section and how to discover the many
       ## additional settings that are supported here.
@@ -72,30 +74,30 @@ services:
       SETTING_MEMCACHED_LOCATION: "memcached:11211"
       SETTING_RABBITMQ_HOST: "rabbitmq"
       SETTING_REDIS_HOST: "redis"
-      SECRETS_email_password: "123456789"
+      SECRETS_email_password: ${EMAIL_PASSWORD}
       ## These should match RABBITMQ_DEFAULT_PASS, POSTGRES_PASSWORD,
       ## MEMCACHED_PASSWORD, and REDIS_PASSWORD above.
-      SECRETS_rabbitmq_password: "REPLACE_WITH_SECURE_RABBITMQ_PASSWORD"
-      SECRETS_postgres_password: "REPLACE_WITH_SECURE_POSTGRES_PASSWORD"
-      SECRETS_memcached_password: "REPLACE_WITH_SECURE_MEMCACHED_PASSWORD"
-      SECRETS_redis_password: "REPLACE_WITH_SECURE_REDIS_PASSWORD"
-      SECRETS_secret_key: "REPLACE_WITH_SECURE_SECRET_KEY"
-      SETTING_EXTERNAL_HOST: "localhost.localdomain"
-      SETTING_ZULIP_ADMINISTRATOR: "admin@example.com"
-      SETTING_EMAIL_HOST: "" # e.g. smtp.example.com
-      SETTING_EMAIL_HOST_USER: "noreply@example.com"
-      SETTING_EMAIL_PORT: "587"
+      SECRETS_rabbitmq_password: ${RABBITMQ_DEFAULT_PASS}
+      SECRETS_postgres_password: ${POSTGRES_PASSWORD}
+      SECRETS_memcached_password: ${MEMCACHED_PASSWORD}
+      SECRETS_redis_password: ${REDIS_PASSWORD}
+      SECRETS_secret_key: ${SECRET_KEY}
+      SETTING_EXTERNAL_HOST: ${EXTERNAL_HOST}
+      SETTING_ZULIP_ADMINISTRATOR: ${ZULIP_ADMINISTRATOR}
+      SETTING_EMAIL_HOST: ${EMAIL_HOST}
+      SETTING_EMAIL_HOST_USER: ${EMAIL_USER}
+      SETTING_EMAIL_PORT: ${EMAIL_PORT}
       ## It seems that the email server needs to use ssl or tls and can't be used without it
       SETTING_EMAIL_USE_SSL: "False"
       SETTING_EMAIL_USE_TLS: "True"
-      ZULIP_AUTH_BACKENDS: "EmailAuthBackend"
+      ZULIP_AUTH_BACKENDS: "EmailAuthBackend,GoogleAuthBackend"
       ## Uncomment this when configuring the mobile push notifications service
       # SETTING_ZULIP_SERVICE_PUSH_NOTIFICATIONS: "True"
       # SETTING_ZULIP_SERVICE_SUBMIT_USAGE_STATISTICS: "True"
 
       ## If you're using a reverse proxy, you'll want to provide the
       ## comma-separated set of IP addresses to trust here.
-      # LOADBALANCER_IPS: "",
+      LOADBALANCER_IPS: ${LOADBALANCER_IPS}
 
       ## By default, files uploaded by users and profile pictures are
       ## stored directly on the Zulip server. You can configure files
